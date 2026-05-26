@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import Admin from "../models/Admin.js";
 
 
@@ -31,31 +30,42 @@ const sendMagicLink = async (req, res) => {
     // Magic link URL
     const magicLink = `${process.env.FRONTEND_URL}/admin-verify?token=${token}`;
 
-    // Send email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+  method: "POST",
+  headers: {
+    accept: "application/json",
+    "api-key": process.env.BREVO_API_KEY,
+    "content-type": "application/json",
+  },
+  body: JSON.stringify({
+    sender: {
+      name: "Calibre Tutorials",
+      email: process.env.SMTP_USER,
+    },
+    to: [{ email }],
+    subject: "🔐 Your Secure Admin Login Link",
+    htmlContent: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 12px;">
+        <h2 style="color: #4f46e5;">Calibre Tutorials Admin Access</h2>
+        <p>Click the button below to securely log in. This link expires in <strong>15 minutes</strong>.</p>
 
-    await transporter.sendMail({
-      from: `"Calibre Tutorials Admin" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "🔐 Your Secure Admin Login Link",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 12px;">
-          <h2 style="color: #4f46e5;">Calibre Tutorials Admin Access</h2>
-          <p>Click the button below to securely log in. This link expires in <strong>15 minutes</strong>.</p>
-          <a href="${magicLink}" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #4f46e5; color: white; border-radius: 8px; text-decoration: none; font-weight: bold;">
-            Login to Admin Panel
-          </a>
-          <p style="margin-top: 20px; color: #999; font-size: 12px;">If you didn't request this, ignore this email.</p>
-        </div>
-      `,
-    });
+        <a href="${magicLink}"
+           style="display:inline-block;margin-top:20px;padding:12px 24px;background:#4f46e5;color:white;border-radius:8px;text-decoration:none;font-weight:bold;">
+          Login to Admin Panel
+        </a>
 
+        <p style="margin-top:20px;color:#999;font-size:12px;">
+          If you didn't request this, ignore this email.
+        </p>
+      </div>
+    `,
+  }),
+});
+
+if (!response.ok) {
+  const error = await response.text();
+  throw new Error(error);
+}
     res.json({ message: "Magic link sent to your email!" });
   } catch (err) {
     console.log("❌ Error:", err);
