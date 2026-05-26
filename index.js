@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
-dotenv.config(); // ⭐ MUST BE FIRST
+dotenv.config(); // MUST BE FIRST
 
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 
-// 🔥 DEBUG ENV (temporary)
+// DEBUG ENV (can remove later)
 console.log("CLOUD NAME:", process.env.CLOUD_NAME);
 console.log("API KEY:", process.env.CLOUD_API_KEY);
 console.log("MONGO URI:", process.env.MONGO_URI ? "Loaded ✅" : "Missing ❌");
@@ -14,13 +14,22 @@ console.log("MONGO URI:", process.env.MONGO_URI ? "Loaded ✅" : "Missing ❌");
 import courseRoutes from "./routes/courseRoutes.js";
 import resultRoutes from "./routes/resultRoutes.js";
 import materialRoutes from "./routes/materialRoutes.js";
-import adminAuthRoutes from "./routes/adminAuthRoutes.js"; 
+import adminAuthRoutes from "./routes/adminAuthRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      process.env.FRONTEND_URL,
+    ],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Test route
@@ -32,16 +41,18 @@ app.get("/", (req, res) => {
 app.use("/api/courses", courseRoutes);
 app.use("/api/results", resultRoutes);
 app.use("/api/materials", materialRoutes);
-app.use("/api/admin-auth", adminAuthRoutes); 
+app.use("/api/admin-auth", adminAuthRoutes);
 app.use("/api/contact", contactRoutes);
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("Mongo Error ❌:", err));
 
 // Server
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
