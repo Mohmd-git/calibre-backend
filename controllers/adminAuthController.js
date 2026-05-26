@@ -29,7 +29,7 @@ const sendMagicLink = async (req, res) => {
     );
 
     // Magic link URL
-    const magicLink = `http://localhost:5173/admin-verify?token=${token}`;
+    const magicLink = `${process.env.FRONTEND_URL}/admin-verify?token=${token}`;
 
     // Send email
     const transporter = nodemailer.createTransport({
