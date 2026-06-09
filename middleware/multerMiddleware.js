@@ -28,7 +28,7 @@ const storage = new CloudinaryStorage({
     return {
       folder,
       resource_type: isPDF ? "raw" : "image", // ⭐ KEY FIX
-      public_id: Date.now() + "-" + file.originalname.split(".")[0],
+      public_id: Date.now() + "-" + file.originalname,
     };
   },
 });
